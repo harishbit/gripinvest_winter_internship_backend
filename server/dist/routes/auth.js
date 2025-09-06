@@ -43,6 +43,7 @@ const db_1 = require("../db/db");
 const schema_1 = require("../db/schema");
 const auth_1 = require("../utils/auth");
 const drizzle_orm_1 = require("drizzle-orm");
+const crypto_1 = require("crypto");
 const router = express_1.default.Router();
 exports.authRoutes = router;
 const signupSchema = zod_1.z.object({
@@ -82,8 +83,11 @@ router.post('/signup', async (req, res) => {
         }
         // Hash password
         const hashedPassword = await (0, auth_1.hashPassword)(validatedData.password);
+        // Generate UUID for user
+        const userId = (0, crypto_1.randomUUID)();
         // Create user
-        const [newUser] = await db_1.db.insert(schema_1.users).values({
+        const result = await db_1.db.insert(schema_1.users).values({
+            id: userId,
             firstName: validatedData.firstName,
             lastName: validatedData.lastName,
             email: validatedData.email,
@@ -92,14 +96,14 @@ router.post('/signup', async (req, res) => {
         });
         // Generate JWT token
         const token = (0, auth_1.generateToken)({
-            userId: String(newUser.insertId),
+            userId: userId,
             email: validatedData.email,
         });
         res.status(201).json({
             message: 'User created successfully',
             token,
             user: {
-                id: newUser.insertId,
+                id: userId,
                 firstName: validatedData.firstName,
                 lastName: validatedData.lastName,
                 email: validatedData.email,

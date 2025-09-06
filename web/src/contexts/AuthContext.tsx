@@ -53,8 +53,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(data.user);
     } catch (error) {
       console.error('Failed to fetch user:', error);
-      safeLocalStorage().removeItem('token');
-      setToken(null);
+      // Only remove token if it's an authentication error, not a network error
+      if (error instanceof Error && error.message.includes('401')) {
+        safeLocalStorage().removeItem('token');
+        setToken(null);
+      }
     } finally {
       setLoading(false);
     }

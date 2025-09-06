@@ -4,12 +4,13 @@ import { db } from '../db/db';
 import { investments, investmentProducts } from '../db/schema';
 import { verifyToken } from '../utils/auth';
 import { eq, desc } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
 
 const router = express.Router();
 
 const investmentSchema = z.object({
   productId: z.string().uuid('Invalid product ID'),
-  amount: z.number().min(1000, 'Minimum investment is ₹1000'),
+  amount: z.number().positive('Amount must be positive').min(1000, 'Minimum investment is ₹1000'),
 });
 
 // GET /api/investments
@@ -60,17 +61,25 @@ router.get('/', async (req, res) => {
 
     // Calculate risk distribution
     const riskDistribution: { [key: string]: number } = {};
-    userInvestments.forEach((inv: any) => {
-      const risk = inv.product.riskLevel;
-      riskDistribution[risk] = (riskDistribution[risk] || 0) + Number(inv.amount);
-    });
+    if (userInvestments.length > 0) {
+      userInvestments.forEach((inv: any) => {
+        const risk = inv.product?.riskLevel;
+        if (risk) {
+          riskDistribution[risk] = (riskDistribution[risk] || 0) + Number(inv.amount);
+        }
+      });
+    }
 
     // Calculate type distribution
     const typeDistribution: { [key: string]: number } = {};
-    userInvestments.forEach((inv: any) => {
-      const type = inv.product.investmentType;
-      typeDistribution[type] = (typeDistribution[type] || 0) + Number(inv.amount);
-    });
+    if (userInvestments.length > 0) {
+      userInvestments.forEach((inv: any) => {
+        const type = inv.product?.investmentType;
+        if (type) {
+          typeDistribution[type] = (typeDistribution[type] || 0) + Number(inv.amount);
+        }
+      });
+    }
 
     const insights = {
       totalInvested,
@@ -152,18 +161,26 @@ router.post('/', async (req, res) => {
     maturityDate.setMonth(maturityDate.getMonth() + tenureMonths);
 
     // Create investment
-    const [newInvestment] = await db.insert(investments).values({
+    const result = await db.insert(investments).values({
       userId: payload.userId,
       productId: validatedData.productId,
-      amount: validatedData.amount.toString(),
-      expectedReturn: expectedReturn.toString(),
+      amount: validatedData.amount,
+      expectedReturn: expectedReturn,
       maturityDate: maturityDate,
-    });
+    } as any);
+
+    // Get the created investment with its generated ID
+    const createdInvestment = await db
+      .select()
+      .from(investments)
+      .where(eq(investments.userId, payload.userId))
+      .orderBy(desc(investments.investedAt))
+      .limit(1);
 
     res.status(201).json({
       message: 'Investment created successfully',
       investment: {
-        id: newInvestment.insertId,
+        id: createdInvestment[0]?.id,
         amount: validatedData.amount,
         expectedReturn,
         maturityDate,

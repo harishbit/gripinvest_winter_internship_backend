@@ -13,7 +13,7 @@ import {
 import { sql } from 'drizzle-orm';
 
 export const users = mysqlTable('users', {
-  id: char('id', { length: 36 }).primaryKey().default('(UUID())'),
+  id: char('id', { length: 36 }).primaryKey().default(sql`(UUID())`),
   firstName: varchar('first_name', { length: 100 }).notNull(),
   lastName: varchar('last_name', { length: 100 }),
   email: varchar('email', { length: 255 }).notNull().unique(),
@@ -24,13 +24,13 @@ export const users = mysqlTable('users', {
 });
 
 export const investmentProducts = mysqlTable('investment_products', {
-  id: char('id', { length: 36 }).primaryKey().default('(UUID())'),
+  id: char('id', { length: 36 }).primaryKey().default(sql`(UUID())`),
   name: varchar('name', { length: 255 }).notNull(),
   investmentType: mysqlEnum('investment_type', ['bond', 'fd', 'mf', 'etf', 'other']).notNull(),
   tenureMonths: int('tenure_months').notNull(),
   annualYield: decimal('annual_yield', { precision: 5, scale: 2 }).notNull(),
   riskLevel: mysqlEnum('risk_level', ['low', 'moderate', 'high']).notNull(),
-  minInvestment: decimal('min_investment', { precision: 12, scale: 2 }).default('1000.00'),
+  minInvestment: decimal('min_investment', { precision: 12, scale: 2 }).default('1000'),
   maxInvestment: decimal('max_investment', { precision: 12, scale: 2 }),
   description: text('description'),
   createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
@@ -38,7 +38,7 @@ export const investmentProducts = mysqlTable('investment_products', {
 });
 
 export const investments = mysqlTable('investments', {
-  id: char('id', { length: 36 }).primaryKey().default('(UUID())'),
+  id: char('id', { length: 36 }).primaryKey().default(sql`(UUID())`),
   userId: char('user_id', { length: 36 }).notNull(),
   productId: char('product_id', { length: 36 }).notNull(),
   amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),

@@ -14,7 +14,7 @@ const router = express_1.default.Router();
 exports.investmentRoutes = router;
 const investmentSchema = zod_1.z.object({
     productId: zod_1.z.string().uuid('Invalid product ID'),
-    amount: zod_1.z.number().min(1000, 'Minimum investment is ₹1000'),
+    amount: zod_1.z.number().positive('Amount must be positive').min(1000, 'Minimum investment is ₹1000'),
 });
 // GET /api/investments
 router.get('/', async (req, res) => {
@@ -60,16 +60,24 @@ router.get('/', async (req, res) => {
         const totalExpectedReturn = activeInvestments.reduce((sum, inv) => sum + Number(inv.expectedReturn || 0), 0);
         // Calculate risk distribution
         const riskDistribution = {};
-        userInvestments.forEach((inv) => {
-            const risk = inv.product.riskLevel;
-            riskDistribution[risk] = (riskDistribution[risk] || 0) + Number(inv.amount);
-        });
+        if (userInvestments.length > 0) {
+            userInvestments.forEach((inv) => {
+                const risk = inv.product?.riskLevel;
+                if (risk) {
+                    riskDistribution[risk] = (riskDistribution[risk] || 0) + Number(inv.amount);
+                }
+            });
+        }
         // Calculate type distribution
         const typeDistribution = {};
-        userInvestments.forEach((inv) => {
-            const type = inv.product.investmentType;
-            typeDistribution[type] = (typeDistribution[type] || 0) + Number(inv.amount);
-        });
+        if (userInvestments.length > 0) {
+            userInvestments.forEach((inv) => {
+                const type = inv.product?.investmentType;
+                if (type) {
+                    typeDistribution[type] = (typeDistribution[type] || 0) + Number(inv.amount);
+                }
+            });
+        }
         const insights = {
             totalInvested,
             totalExpectedReturn,
@@ -139,17 +147,24 @@ router.post('/', async (req, res) => {
         const maturityDate = new Date();
         maturityDate.setMonth(maturityDate.getMonth() + tenureMonths);
         // Create investment
-        const [newInvestment] = await db_1.db.insert(schema_1.investments).values({
+        const result = await db_1.db.insert(schema_1.investments).values({
             userId: payload.userId,
             productId: validatedData.productId,
-            amount: validatedData.amount.toString(),
-            expectedReturn: expectedReturn.toString(),
+            amount: validatedData.amount,
+            expectedReturn: expectedReturn,
             maturityDate: maturityDate,
         });
+        // Get the created investment with its generated ID
+        const createdInvestment = await db_1.db
+            .select()
+            .from(schema_1.investments)
+            .where((0, drizzle_orm_1.eq)(schema_1.investments.userId, payload.userId))
+            .orderBy((0, drizzle_orm_1.desc)(schema_1.investments.investedAt))
+            .limit(1);
         res.status(201).json({
             message: 'Investment created successfully',
             investment: {
-                id: newInvestment.insertId,
+                id: createdInvestment[0]?.id,
                 amount: validatedData.amount,
                 expectedReturn,
                 maturityDate,

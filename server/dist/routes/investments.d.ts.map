@@ -1,1 +1,1 @@
-{"version":3,"file":"investments.d.ts","sourceRoot":"","sources":["../../src/routes/investments.ts"],"names":[],"mappings":"AAOA,QAAA,MAAM,MAAM,4CAAmB,CAAC;AAoLhC,OAAO,EAAE,MAAM,IAAI,gBAAgB,EAAE,CAAC"}
+{"version":3,"file":"investments.d.ts","sourceRoot":"","sources":["../../src/routes/investments.ts"],"names":[],"mappings":"AAQA,QAAA,MAAM,MAAM,4CAAmB,CAAC;AAoMhC,OAAO,EAAE,MAAM,IAAI,gBAAgB,EAAE,CAAC"}

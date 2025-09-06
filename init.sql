@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS investment_products (
     tenure_months INT NOT NULL,
     annual_yield DECIMAL(5,2) NOT NULL,
     risk_level ENUM('low','moderate','high') NOT NULL,
-    min_investment DECIMAL(12,2) DEFAULT 1000.00,
+    min_investment DECIMAL(12,2) DEFAULT 1000,
     max_investment DECIMAL(12,2),
     description TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

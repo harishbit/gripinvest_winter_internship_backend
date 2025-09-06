@@ -4,6 +4,7 @@ import { db } from '../db/db';
 import { users } from '../db/schema';
 import { hashPassword, generateToken, verifyToken, validatePasswordStrength } from '../utils/auth';
 import { eq } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
 
 const router = express.Router();
 
@@ -51,8 +52,12 @@ router.post('/signup', async (req, res) => {
     // Hash password
     const hashedPassword = await hashPassword(validatedData.password);
 
+    // Generate UUID for user
+    const userId = randomUUID();
+
     // Create user
-    const [newUser] = await db.insert(users).values({
+    const result = await db.insert(users).values({
+      id: userId,
       firstName: validatedData.firstName,
       lastName: validatedData.lastName,
       email: validatedData.email,
@@ -62,7 +67,7 @@ router.post('/signup', async (req, res) => {
 
     // Generate JWT token
     const token = generateToken({
-      userId: String(newUser.insertId),
+      userId: userId,
       email: validatedData.email,
     });
 
@@ -70,7 +75,7 @@ router.post('/signup', async (req, res) => {
       message: 'User created successfully',
       token,
       user: {
-        id: newUser.insertId,
+        id: userId,
         firstName: validatedData.firstName,
         lastName: validatedData.lastName,
         email: validatedData.email,
