@@ -18,6 +18,76 @@ const productSchema = z.object({
   description: z.string().optional(),
 });
 
+/**
+ * @swagger
+ * /products:
+ *   get:
+ *     summary: Get all investment products with optional filtering and sorting
+ *     tags: [Products]
+ *     security: []
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [bond, fd, mf, etf, other]
+ *         description: Filter by investment type
+ *       - in: query
+ *         name: riskLevel
+ *         schema:
+ *           type: string
+ *           enum: [low, moderate, high]
+ *         description: Filter by risk level
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [createdAt, annualYield, tenureMonths, minInvestment]
+ *           default: createdAt
+ *         description: Field to sort by
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Sort order
+ *     responses:
+ *       200:
+ *         description: List of investment products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 products:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/InvestmentProduct'
+ *                 total:
+ *                   type: integer
+ *                   description: Total number of products
+ *                 summary:
+ *                   type: object
+ *                   properties:
+ *                     byType:
+ *                       type: object
+ *                       additionalProperties:
+ *                         type: integer
+ *                     byRiskLevel:
+ *                       type: object
+ *                       additionalProperties:
+ *                         type: integer
+ *                     avgYield:
+ *                       type: number
+ *                       format: decimal
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // GET /api/products
 router.get('/', async (req, res) => {
   try {
@@ -70,6 +140,44 @@ router.get('/', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /products/{id}:
+ *   get:
+ *     summary: Get a specific investment product by ID
+ *     tags: [Products]
+ *     security: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Product unique identifier
+ *     responses:
+ *       200:
+ *         description: Product found successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 product:
+ *                   $ref: '#/components/schemas/InvestmentProduct'
+ *       404:
+ *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // GET /api/products/:id
 router.get('/:id', async (req, res) => {
   try {
@@ -96,6 +204,100 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /products:
+ *   post:
+ *     summary: Create a new investment product (Admin only)
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - investmentType
+ *               - tenureMonths
+ *               - annualYield
+ *               - riskLevel
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Product name
+ *                 example: "Premium Bond Series A"
+ *               investmentType:
+ *                 type: string
+ *                 enum: [bond, fd, mf, etf, other]
+ *                 description: Type of investment product
+ *                 example: "bond"
+ *               tenureMonths:
+ *                 type: integer
+ *                 minimum: 1
+ *                 description: Investment tenure in months
+ *                 example: 24
+ *               annualYield:
+ *                 type: number
+ *                 format: decimal
+ *                 minimum: 0
+ *                 description: Expected annual yield percentage
+ *                 example: 8.5
+ *               riskLevel:
+ *                 type: string
+ *                 enum: [low, moderate, high]
+ *                 description: Risk level of the product
+ *                 example: "low"
+ *               minInvestment:
+ *                 type: number
+ *                 format: decimal
+ *                 minimum: 0
+ *                 description: Minimum investment amount
+ *                 example: 1000
+ *               maxInvestment:
+ *                 type: number
+ *                 format: decimal
+ *                 minimum: 0
+ *                 description: Maximum investment amount
+ *                 example: 1000000
+ *               description:
+ *                 type: string
+ *                 description: Product description
+ *                 example: "A low-risk government bond with steady returns"
+ *     responses:
+ *       201:
+ *         description: Product created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Product created successfully"
+ *                 product:
+ *                   $ref: '#/components/schemas/InvestmentProduct'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Unauthorized - Admin access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // POST /api/products (admin only)
 router.post('/', async (req, res) => {
   try {

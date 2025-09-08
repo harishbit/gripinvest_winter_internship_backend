@@ -8,6 +8,7 @@ import { productRoutes } from './routes/products';
 import { investmentRoutes } from './routes/investments';
 import { logRoutes } from './routes/logs';
 import { healthRoutes } from './routes/health';
+import { specs, swaggerUi } from './config/swagger';
 
 // Load environment variables
 dotenv.config();
@@ -41,12 +42,22 @@ app.use('/api/investments', investmentRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/health', healthRoutes);
 
+// Swagger documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Grip Invest API Documentation',
+  swaggerOptions: {
+    persistAuthorization: true,
+  }
+}));
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
     message: 'Grip Invest API Server',
     version: '1.0.0',
     status: 'running',
+    documentation: '/api-docs',
     endpoints: {
       auth: '/api/auth',
       products: '/api/products',
@@ -77,5 +88,6 @@ app.use('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`📚 API docs: http://localhost:${PORT}/`);
+  console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+  console.log(`🏠 API Root: http://localhost:${PORT}/`);
 });

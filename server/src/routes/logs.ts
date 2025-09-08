@@ -4,6 +4,61 @@ import { getTransactionLogs, getErrorSummary, analyzeErrors } from '../utils/tra
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /logs:
+ *   get:
+ *     summary: Get transaction logs and error analytics (Admin only)
+ *     tags: [Logs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: string
+ *           default: "50"
+ *         description: Number of logs to retrieve
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: string
+ *           default: "0"
+ *         description: Number of logs to skip
+ *     responses:
+ *       200:
+ *         description: Transaction logs and analytics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 logs:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/TransactionLog'
+ *                 analytics:
+ *                   type: object
+ *                   properties:
+ *                     totalLogs:
+ *                       type: integer
+ *                     errorSummary:
+ *                       type: object
+ *                     errorAnalysis:
+ *                       type: object
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // GET /api/logs
 router.get('/', async (req, res) => {
   try {

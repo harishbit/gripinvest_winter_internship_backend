@@ -13,6 +13,46 @@ const investmentSchema = z.object({
   amount: z.number().positive('Amount must be positive').min(1000, 'Minimum investment is ₹1000'),
 });
 
+/**
+ * @swagger
+ * /investments:
+ *   get:
+ *     summary: Get user's investments and portfolio summary
+ *     tags: [Investments]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User investments and portfolio summary
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 investments:
+ *                   type: array
+ *                   items:
+ *                     allOf:
+ *                       - $ref: '#/components/schemas/Investment'
+ *                       - type: object
+ *                         properties:
+ *                           product:
+ *                             $ref: '#/components/schemas/InvestmentProduct'
+ *                 portfolio:
+ *                   $ref: '#/components/schemas/PortfolioSummary'
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // GET /api/investments
 router.get('/', async (req, res) => {
   try {
@@ -104,6 +144,88 @@ router.get('/', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /investments:
+ *   post:
+ *     summary: Create a new investment
+ *     tags: [Investments]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - productId
+ *               - amount
+ *             properties:
+ *               productId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID of the investment product
+ *                 example: "550e8400-e29b-41d4-a716-446655440000"
+ *               amount:
+ *                 type: number
+ *                 format: decimal
+ *                 minimum: 1000
+ *                 description: Investment amount (minimum ₹1000)
+ *                 example: 50000
+ *     responses:
+ *       201:
+ *         description: Investment created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Investment created successfully"
+ *                 investment:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     amount:
+ *                       type: number
+ *                       format: decimal
+ *                     expectedReturn:
+ *                       type: number
+ *                       format: decimal
+ *                     maturityDate:
+ *                       type: string
+ *                       format: date-time
+ *                     product:
+ *                       $ref: '#/components/schemas/InvestmentProduct'
+ *       400:
+ *         description: Validation error or investment amount limits exceeded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // POST /api/investments
 router.post('/', async (req, res) => {
   try {
