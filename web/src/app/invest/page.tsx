@@ -15,7 +15,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
-  TrendingUp, 
   DollarSign, 
   Clock, 
   Target, 
@@ -87,8 +86,16 @@ function InvestPageContent() {
   }, [form.watch('amount'), product]);
 
   const fetchProduct = async () => {
+    if (!productId) {
+      toast.error('Product ID is required');
+      router.push('/products');
+      return;
+    }
+    
     try {
-      const data = await apiClient.getProduct(productId);
+      const data = await apiClient.getProduct(productId) as {
+        product: InvestmentProduct;
+      };
       setProduct(data.product);
       form.setValue('amount', data.product.minInvestment);
     } catch (error) {
@@ -169,7 +176,7 @@ function InvestPageContent() {
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <TrendingUp className="h-8 w-8 text-primary" />
+            <img src="/favicon.ico" alt="Grip Invest" className="h-8 w-8" />
             <h1 className="text-2xl font-bold">Grip Invest</h1>
           </div>
           <div className="flex items-center space-x-4">

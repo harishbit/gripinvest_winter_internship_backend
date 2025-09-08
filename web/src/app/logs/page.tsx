@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
-  TrendingUp, 
   Search, 
   Filter, 
   AlertCircle, 
@@ -67,7 +66,11 @@ export default function LogsPage() {
 
   const fetchLogs = async () => {
     try {
-      const data = await apiClient.getLogs();
+      const data = await apiClient.getLogs() as {
+        logs: TransactionLog[];
+        errorSummary: ErrorSummary[];
+        aiInsights: string[];
+      };
       setLogs(data.logs);
       setErrorSummary(data.errorSummary);
       setAiInsights(data.aiInsights);
@@ -178,7 +181,7 @@ export default function LogsPage() {
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <TrendingUp className="h-8 w-8 text-primary" />
+            <img src="/favicon.ico" alt="Grip Invest" className="h-8 w-8" />
             <h1 className="text-2xl font-bold">Grip Invest</h1>
           </div>
           <div className="flex items-center space-x-4">

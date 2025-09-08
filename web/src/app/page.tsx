@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, TrendingUp, Shield, Zap, BarChart3, Users, Target } from 'lucide-react';
+import { ArrowRight,TrendingUp, Shield, Zap, BarChart3, Users, Target } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Home() {
@@ -28,7 +28,7 @@ export default function Home() {
       <header className="bg-white/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <TrendingUp className="h-8 w-8 text-primary" />
+            <img src="/favicon.ico" alt="Grip Invest" className="h-8 w-8" />
             <h1 className="text-2xl font-bold text-gray-900">Grip Invest</h1>
           </div>
           <div className="flex space-x-4">
@@ -164,7 +164,7 @@ export default function Home() {
       <footer className="bg-gray-900 text-white py-12">
         <div className="container mx-auto px-4 text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <TrendingUp className="h-6 w-6" />
+           
             <span className="text-xl font-bold">Grip Invest</span>
           </div>
           <p className="text-gray-400">

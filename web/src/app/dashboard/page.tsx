@@ -65,7 +65,10 @@ export default function DashboardPage() {
 
   const fetchInvestments = async () => {
     try {
-      const data = await apiClient.getInvestments();
+      const data = await apiClient.getInvestments() as {
+        investments: Investment[];
+        portfolio: Portfolio;
+      };
       setInvestments(data.investments);
       setPortfolio(data.portfolio);
     } catch (error) {
@@ -135,7 +138,7 @@ export default function DashboardPage() {
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <TrendingUp className="h-8 w-8 text-primary" />
+            <img src="/favicon.ico" alt="Grip Invest" className="h-8 w-8" />
             <h1 className="text-2xl font-bold">Grip Invest</h1>
           </div>
           <div className="flex items-center space-x-4">

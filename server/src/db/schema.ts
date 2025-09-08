@@ -59,6 +59,15 @@ export const transactionLogs = mysqlTable('transaction_logs', {
   createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const passwordResetTokens = mysqlTable('password_reset_tokens', {
+  id: char('id', { length: 36 }).primaryKey().default(sql`(UUID())`),
+  email: varchar('email', { length: 255 }).notNull(),
+  token: varchar('token', { length: 6 }).notNull(), // 6-digit code
+  expiresAt: datetime('expires_at').notNull(),
+  isUsed: mysqlEnum('is_used', ['0', '1']).default('0'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
 // Relations
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -68,3 +77,5 @@ export type Investment = typeof investments.$inferSelect;
 export type NewInvestment = typeof investments.$inferInsert;
 export type TransactionLog = typeof transactionLogs.$inferSelect;
 export type NewTransactionLog = typeof transactionLogs.$inferInsert;
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type NewPasswordResetToken = typeof passwordResetTokens.$inferInsert;

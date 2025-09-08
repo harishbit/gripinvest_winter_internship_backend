@@ -1,10 +1,12 @@
 import express from 'express';
 import { z } from 'zod';
 import { db } from '../db/db';
-import { users } from '../db/schema';
+import { users, passwordResetTokens } from '../db/schema';
 import { hashPassword, generateToken, verifyToken, validatePasswordStrength } from '../utils/auth';
-import { eq } from 'drizzle-orm';
+import { EmailService, generateResetCode } from '../utils/email';
+import { eq, and, gt } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
+import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 
@@ -19,6 +21,16 @@ const signupSchema = z.object({
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
+});
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
+const resetPasswordSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  code: z.string().length(6, 'Reset code must be 6 digits'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 /**
@@ -138,6 +150,10 @@ router.post('/signup', async (req, res) => {
       userId: userId,
       email: validatedData.email,
     });
+
+    // Send welcome email (don't wait for it to complete)
+    EmailService.sendWelcomeEmail(validatedData.email, validatedData.firstName)
+      .catch(error => console.error('Failed to send welcome email:', error));
 
     res.status(201).json({
       message: 'User created successfully',
@@ -363,6 +379,272 @@ router.get('/me', async (req, res) => {
     });
   } catch (error) {
     console.error('Get user error:', error);
+    res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /auth/forgot-password:
+ *   post:
+ *     summary: Request password reset code
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's email address
+ *                 example: "john.doe@example.com"
+ *     responses:
+ *       200:
+ *         description: Password reset code sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Password reset code sent to your email"
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+// POST /api/auth/forgot-password
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const validatedData = forgotPasswordSchema.parse(req.body);
+
+    // Check if user exists
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, validatedData.email))
+      .limit(1);
+
+    if (user.length === 0) {
+      return res.status(404).json({
+        error: 'User with this email does not exist'
+      });
+    }
+
+    // Generate reset code
+    const resetCode = generateResetCode();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15); // 15 minutes expiry
+
+    // Save reset token to database
+    await db.insert(passwordResetTokens).values({
+      email: validatedData.email,
+      token: resetCode,
+      expiresAt: expiresAt,
+      isUsed: '0'
+    });
+
+    // Send email with reset code
+    const emailSent = await EmailService.sendPasswordResetCode(validatedData.email, resetCode, user[0].firstName);
+
+    if (!emailSent) {
+      return res.status(500).json({
+        error: 'Failed to send password reset email'
+      });
+    }
+
+    res.json({
+      message: 'Password reset code sent to your email'
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: error.issues
+      });
+    }
+
+    console.error('Forgot password error:', error);
+    res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /auth/reset-password:
+ *   post:
+ *     summary: Reset password using verification code
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - code
+ *               - newPassword
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's email address
+ *                 example: "john.doe@example.com"
+ *               code:
+ *                 type: string
+ *                 minLength: 6
+ *                 maxLength: 6
+ *                 description: 6-digit verification code
+ *                 example: "123456"
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 8
+ *                 description: New password (minimum 8 characters)
+ *                 example: "NewSecurePass123!"
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Password reset successfully"
+ *       400:
+ *         description: Validation error or weak password
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Invalid or expired reset code
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+// POST /api/auth/reset-password
+router.post('/reset-password', async (req, res) => {
+  try {
+    const validatedData = resetPasswordSchema.parse(req.body);
+
+    // Validate password strength
+    const passwordValidation = validatePasswordStrength(validatedData.newPassword);
+    if (!passwordValidation.isValid) {
+      return res.status(400).json({
+        error: 'Password does not meet requirements',
+        feedback: passwordValidation.feedback,
+        score: passwordValidation.score
+      });
+    }
+
+    // Find valid reset token
+    const currentTime = new Date();
+    const resetToken = await db
+      .select()
+      .from(passwordResetTokens)
+      .where(
+        and(
+          eq(passwordResetTokens.email, validatedData.email),
+          eq(passwordResetTokens.token, validatedData.code),
+          eq(passwordResetTokens.isUsed, '0'),
+          gt(passwordResetTokens.expiresAt, currentTime)
+        )
+      )
+      .limit(1);
+
+    if (resetToken.length === 0) {
+      return res.status(401).json({
+        error: 'Invalid or expired reset code'
+      });
+    }
+
+    // Check if user exists
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, validatedData.email))
+      .limit(1);
+
+    if (user.length === 0) {
+      return res.status(404).json({
+        error: 'User not found'
+      });
+    }
+
+    // Hash new password
+    const hashedPassword = await hashPassword(validatedData.newPassword);
+
+    // Update user password
+    await db
+      .update(users)
+      .set({
+        passwordHash: hashedPassword,
+        updatedAt: new Date()
+      })
+      .where(eq(users.email, validatedData.email));
+
+    // Mark reset token as used
+    await db
+      .update(passwordResetTokens)
+      .set({
+        isUsed: '1'
+      })
+      .where(eq(passwordResetTokens.id, resetToken[0].id));
+
+    res.json({
+      message: 'Password reset successfully'
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: error.issues
+      });
+    }
+
+    console.error('Reset password error:', error);
     res.status(500).json({
       error: 'Internal server error'
     });

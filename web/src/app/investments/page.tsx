@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  TrendingUp, 
   DollarSign, 
   PieChart, 
   Target, 
@@ -64,7 +63,10 @@ export default function InvestmentsPage() {
 
   const fetchInvestments = async () => {
     try {
-      const data = await apiClient.getInvestments();
+      const data = await apiClient.getInvestments() as {
+        investments: Investment[];
+        portfolio: Portfolio;
+      };
       setInvestments(data.investments);
       setPortfolio(data.portfolio);
     } catch (error) {
@@ -180,7 +182,7 @@ export default function InvestmentsPage() {
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <TrendingUp className="h-8 w-8 text-primary" />
+            <img src="/favicon.ico" alt="Grip Invest" className="h-8 w-8" />
             <h1 className="text-2xl font-bold">Grip Invest</h1>
           </div>
           <div className="flex items-center space-x-4">
@@ -220,7 +222,7 @@ export default function InvestmentsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Expected Returns</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <img src="/favicon.ico" alt="Expected Returns" className="h-4 w-4" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">₹{portfolio?.totalExpectedReturn.toLocaleString() || 0}</div>

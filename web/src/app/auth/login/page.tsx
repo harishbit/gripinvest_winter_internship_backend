@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { TrendingUp, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -55,7 +55,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <TrendingUp className="h-8 w-8 text-primary" />
+            <img src="/favicon.ico" alt="Grip Invest" className="h-8 w-8" />
             <h1 className="text-2xl font-bold">Grip Invest</h1>
           </div>
           <CardTitle>Welcome Back</CardTitle>
@@ -125,6 +125,16 @@ export default function LoginPage() {
               </Button>
             </form>
           </Form>
+
+          <div className="mt-4 text-center">
+            <button 
+              type="button"
+              onClick={() => router.push('/auth/forgot-password')}
+              className="text-sm text-primary hover:underline bg-transparent border-none cursor-pointer"
+            >
+              Forgot your password?
+            </button>
+          </div>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">

@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { TrendingUp, Eye, EyeOff, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -25,7 +25,7 @@ const signupSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string().min(8, 'Please confirm your password'),
-  riskAppetite: z.enum(['low', 'moderate', 'high']).default('moderate'),
+  riskAppetite: z.enum(['low', 'moderate', 'high']),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -164,7 +164,7 @@ export default function SignupPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <TrendingUp className="h-8 w-8 text-primary" />
+            <img src="/favicon.ico" alt="Grip Invest" className="h-8 w-8" />
             <h1 className="text-2xl font-bold">Grip Invest</h1>
           </div>
           <CardTitle>Create Account</CardTitle>
@@ -374,6 +374,11 @@ export default function SignupPage() {
               Already have an account?{' '}
               <Link href="/auth/login" className="text-primary hover:underline">
                 Sign in
+              </Link>
+            </p>
+            <p className="text-sm text-gray-600 mt-2">
+              <Link href="/auth/forgot-password" className="text-primary hover:underline">
+                Forgot your password?
               </Link>
             </p>
           </div>

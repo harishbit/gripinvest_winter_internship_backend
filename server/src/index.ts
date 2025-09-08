@@ -1,17 +1,20 @@
+// Load environment variables FIRST
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables from the server directory
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import dotenv from 'dotenv';
 import { authRoutes } from './routes/auth';
 import { productRoutes } from './routes/products';
 import { investmentRoutes } from './routes/investments';
 import { logRoutes } from './routes/logs';
 import { healthRoutes } from './routes/health';
 import { specs, swaggerUi } from './config/swagger';
-
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;

@@ -25,6 +25,7 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.14.4",
+    "resend": "^6.0.2",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "zod": "^4.1.5"

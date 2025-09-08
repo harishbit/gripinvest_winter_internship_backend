@@ -294,6 +294,40 @@ const options = {
               description: 'Investment type distribution'
             }
           }
+        },
+        PasswordResetToken: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Reset token unique identifier'
+            },
+            email: {
+              type: 'string',
+              format: 'email',
+              description: 'User email address'
+            },
+            token: {
+              type: 'string',
+              description: '6-digit verification code'
+            },
+            expiresAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Token expiration timestamp'
+            },
+            isUsed: {
+              type: 'string',
+              enum: ['0', '1'],
+              description: 'Whether the token has been used'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Token creation timestamp'
+            }
+          }
         }
       }
     },
