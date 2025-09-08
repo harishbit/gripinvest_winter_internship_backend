@@ -108,10 +108,9 @@ export class EmailService {
             <body>
               <div class="container">
                 <div class="header">
-                  <div class="logo">
-      <img src="/favicon.ico" alt="Grip Invest Logo" style="width:24px; height:24px; vertical-align:middle;">
-      Grip Invest
-    </div>
+                  <div class="logo">🔒 Grip Invest</div>
+                  Grip Invest
+                  </div>
                   <h1>Password Reset Request</h1>
                 </div>
                 
