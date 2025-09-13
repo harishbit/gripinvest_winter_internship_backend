@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { db } from '../db/db';
 import { users, passwordResetTokens } from '../db/schema';
@@ -102,7 +102,7 @@ const resetPasswordSchema = z.object({
  */
 
 // POST /api/auth/signup
-router.post('/signup', async (req, res) => {
+router.post('/signup', async (req: Request, res: Response) => {
   try {
     const validatedData = signupSchema.parse(req.body);
 
@@ -238,7 +238,7 @@ router.post('/signup', async (req, res) => {
  *               $ref: '#/components/schemas/Error'
  */
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', async (req: Request, res: Response) => {
   try {
     const validatedData = loginSchema.parse(req.body);
 
@@ -336,7 +336,7 @@ router.post('/login', async (req, res) => {
  *               $ref: '#/components/schemas/Error'
  */
 // GET /api/auth/me
-router.get('/me', async (req, res) => {
+router.get('/me', async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -437,7 +437,7 @@ router.get('/me', async (req, res) => {
  *               $ref: '#/components/schemas/Error'
  */
 // POST /api/auth/forgot-password
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', async (req: Request, res: Response) => {
   try {
     const validatedData = forgotPasswordSchema.parse(req.body);
 
@@ -565,7 +565,7 @@ router.post('/forgot-password', async (req, res) => {
  *               $ref: '#/components/schemas/Error'
  */
 // POST /api/auth/reset-password
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', async (req: Request, res: Response) => {
   try {
     const validatedData = resetPasswordSchema.parse(req.body);
 
