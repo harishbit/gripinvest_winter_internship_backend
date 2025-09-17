@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { 
   Search, 
   Filter, 
@@ -19,7 +20,9 @@ import {
   Clock,
   Zap,
   BarChart3,
-  RefreshCw
+  RefreshCw,
+  User,
+  LogOut
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -44,7 +47,7 @@ interface ErrorSummary {
 }
 
 export default function LogsPage() {
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
   const [logs, setLogs] = useState<TransactionLog[]>([]);
   const [errorSummary, setErrorSummary] = useState<ErrorSummary[]>([]);
   const [aiInsights, setAiInsights] = useState<string[]>([]);
@@ -191,6 +194,29 @@ export default function LogsPage() {
             <Link href="/investments">
               <Button variant="ghost">My Investments</Button>
             </Link>
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center space-x-2">
+                    <User className="h-4 w-4" />
+                    <span>{user.firstName}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="flex items-center space-x-2 cursor-pointer">
+                      <User className="h-4 w-4" />
+                      <span>View Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout} className="flex items-center space-x-2 cursor-pointer">
+                    <LogOut className="h-4 w-4" />
+                    <span>Log Out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </header>

@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -19,7 +20,9 @@ import {
   Wallet,
   Zap,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  User,
+  LogOut
 } from 'lucide-react';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import Link from 'next/link';
@@ -52,7 +55,7 @@ interface Portfolio {
 }
 
 export default function DashboardPage() {
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [loading, setLoading] = useState(true);
@@ -142,8 +145,31 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold">Grip Invest</h1>
           </div>
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600">Welcome, {user.firstName}</span>
-            <Badge variant="outline">{user.riskAppetite} Risk</Badge>
+            <Link href="/logs">
+              <Button variant="ghost">Transaction Logs</Button>
+            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center space-x-2">
+                  <User className="h-4 w-4" />
+                  <span>{user?.firstName}</span>
+                  <Badge variant="outline">{user?.riskAppetite} Risk</Badge>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link href="/profile" className="flex items-center space-x-2 cursor-pointer">
+                    <User className="h-4 w-4" />
+                    <span>View Profile</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout} className="flex items-center space-x-2 cursor-pointer">
+                  <LogOut className="h-4 w-4" />
+                  <span>Log Out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>

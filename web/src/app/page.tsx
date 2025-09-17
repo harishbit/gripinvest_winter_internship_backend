@@ -4,11 +4,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight,TrendingUp, Shield, Zap, BarChart3, Users, Target } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { ArrowRight,TrendingUp, Shield, Zap, BarChart3, Users, Target, User, LogOut } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Home() {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
 
   if (loading) {
     return (

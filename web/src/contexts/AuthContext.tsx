@@ -3,14 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { apiClient } from '@/lib/api';
 import { safeLocalStorage } from '@/lib/client-only';
-
-interface User {
-  id: string;
-  firstName: string;
-  lastName?: string;
-  email: string;
-  riskAppetite: 'low' | 'moderate' | 'high';
-}
+import { User, AuthResponse, SignupData, GetMeResponse } from '@/types/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -19,14 +12,6 @@ interface AuthContextType {
   signup: (userData: SignupData) => Promise<void>;
   logout: () => void;
   loading: boolean;
-}
-
-interface SignupData {
-  firstName: string;
-  lastName?: string;
-  email: string;
-  password: string;
-  riskAppetite: 'low' | 'moderate' | 'high';
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = async (authToken: string) => {
     try {
-      const data = await apiClient.getMe();
+      const data: GetMeResponse = await apiClient.getMe();
       setUser(data.user);
     } catch (error) {
       console.error('Failed to fetch user:', error);
@@ -66,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const data = await apiClient.login({ email, password });
+      const data: AuthResponse = await apiClient.login({ email, password });
       setToken(data.token);
       setUser(data.user);
       safeLocalStorage().setItem('token', data.token);
@@ -80,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = async (userData: SignupData) => {
     setLoading(true);
     try {
-      const data = await apiClient.signup(userData);
+      const data: AuthResponse = await apiClient.signup(userData);
       setToken(data.token);
       setUser(data.user);
       safeLocalStorage().setItem('token', data.token);

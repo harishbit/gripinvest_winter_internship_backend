@@ -1,3 +1,5 @@
+import { User, AuthResponse, SignupData, LoginData, GetMeResponse } from '@/types/auth';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 class ApiClient {
@@ -35,28 +37,22 @@ class ApiClient {
   }
 
   // Auth endpoints
-  async signup(data: {
-    firstName: string;
-    lastName?: string;
-    email: string;
-    password: string;
-    riskAppetite?: 'low' | 'moderate' | 'high';
-  }) {
-    return this.request('/api/auth/signup', {
+  async signup(data: SignupData): Promise<AuthResponse> {
+    return this.request<AuthResponse>('/api/auth/signup', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async login(data: { email: string; password: string }) {
-    return this.request('/api/auth/login', {
+  async login(data: LoginData): Promise<AuthResponse> {
+    return this.request<AuthResponse>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async getMe() {
-    return this.request('/api/auth/me');
+  async getMe(): Promise<GetMeResponse> {
+    return this.request<GetMeResponse>('/api/auth/me');
   }
 
   // Product endpoints
