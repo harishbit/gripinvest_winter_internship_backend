@@ -29,3 +29,13 @@ export interface LoginData {
 export interface GetMeResponse {
   user: User;
 }
+
+export interface UpdateProfileData {
+  firstName: string;
+  lastName?: string;
+}
+
+export interface UpdateProfileResponse {
+  message: string;
+  user: User;
+}

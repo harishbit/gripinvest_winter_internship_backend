@@ -33,6 +33,11 @@ const resetPasswordSchema = z.object({
   newPassword: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
+const updateProfileSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().optional(),
+});
+
 /**
  * @swagger
  * /auth/signup:
@@ -645,6 +650,140 @@ router.post('/reset-password', async (req: Request, res: Response) => {
     }
 
     console.error('Reset password error:', error);
+    res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /auth/profile:
+ *   put:
+ *     summary: Update user profile information
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - firstName
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *                 description: User's first name
+ *                 example: "John"
+ *               lastName:
+ *                 type: string
+ *                 description: User's last name
+ *                 example: "Doe"
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Profile updated successfully"
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+// PUT /api/auth/profile
+router.put('/profile', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        error: 'Authorization header missing or invalid'
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const payload = verifyToken(token);
+
+    if (!payload) {
+      return res.status(401).json({
+        error: 'Invalid or expired token'
+      });
+    }
+
+    const validatedData = updateProfileSchema.parse(req.body);
+
+    // Update user profile
+    const result = await db
+      .update(users)
+      .set({
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, payload.userId));
+
+    // Get updated user details
+    const updatedUser = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        riskAppetite: users.riskAppetite,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .where(eq(users.id, payload.userId))
+      .limit(1);
+
+    if (updatedUser.length === 0) {
+      return res.status(404).json({
+        error: 'User not found'
+      });
+    }
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: updatedUser[0],
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: error.issues
+      });
+    }
+
+    console.error('Update profile error:', error);
     res.status(500).json({
       error: 'Internal server error'
     });

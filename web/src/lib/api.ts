@@ -1,4 +1,4 @@
-import { User, AuthResponse, SignupData, LoginData, GetMeResponse } from '@/types/auth';
+import { User, AuthResponse, SignupData, LoginData, GetMeResponse, UpdateProfileData, UpdateProfileResponse } from '@/types/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -53,6 +53,13 @@ class ApiClient {
 
   async getMe(): Promise<GetMeResponse> {
     return this.request<GetMeResponse>('/api/auth/me');
+  }
+
+  async updateProfile(data: UpdateProfileData): Promise<UpdateProfileResponse> {
+    return this.request<UpdateProfileResponse>('/api/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   }
 
   // Product endpoints

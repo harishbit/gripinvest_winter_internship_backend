@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { apiClient } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,9 +25,10 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(user);
+  const [isLoading, setIsLoading] = useState(false);
 
   if (!user) {
     return (
@@ -46,10 +48,26 @@ export default function ProfilePage() {
     );
   }
 
-  const handleSave = () => {
-    // TODO: Implement profile update API call
-    toast.success('Profile updated successfully!');
-    setIsEditing(false);
+  const handleSave = async () => {
+    if (!editedUser || !user) return;
+    
+    setIsLoading(true);
+    try {
+      const result = await apiClient.updateProfile({
+        firstName: editedUser.firstName,
+        lastName: editedUser.lastName,
+      });
+
+      // Update the user in context
+      updateUser(result.user);
+      toast.success('Profile updated successfully!');
+      setIsEditing(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update profile');
+      setEditedUser(user); // Reset to original values on error
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -160,11 +178,11 @@ export default function ProfilePage() {
                 </Button>
               ) : (
                 <div className="flex space-x-2">
-                  <Button onClick={handleSave} size="sm">
+                  <Button onClick={handleSave} size="sm" disabled={isLoading}>
                     <Save className="h-4 w-4 mr-2" />
-                    Save
+                    {isLoading ? 'Saving...' : 'Save'}
                   </Button>
-                  <Button onClick={handleCancel} variant="outline" size="sm">
+                  <Button onClick={handleCancel} variant="outline" size="sm" disabled={isLoading}>
                     <X className="h-4 w-4 mr-2" />
                     Cancel
                   </Button>
@@ -180,6 +198,7 @@ export default function ProfilePage() {
                       id="firstName"
                       value={editedUser?.firstName || ''}
                       onChange={(e) => setEditedUser({...editedUser!, firstName: e.target.value})}
+                      disabled={isLoading}
                     />
                   ) : (
                     <p className="text-sm font-medium">{user.firstName}</p>
@@ -193,6 +212,7 @@ export default function ProfilePage() {
                       id="lastName"
                       value={editedUser?.lastName || ''}
                       onChange={(e) => setEditedUser({...editedUser!, lastName: e.target.value})}
+                      disabled={isLoading}
                     />
                   ) : (
                     <p className="text-sm font-medium">{user.lastName || 'Not provided'}</p>
