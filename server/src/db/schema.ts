@@ -19,6 +19,7 @@ export const users = mysqlTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
   riskAppetite: mysqlEnum('risk_appetite', ['low', 'moderate', 'high']).default('moderate'),
+  role: mysqlEnum('role', ['user', 'admin']).default('user'),
   createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
   updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`),
 });

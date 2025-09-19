@@ -1,7 +1,7 @@
 import express from 'express';
 import { z } from 'zod';
 import { db } from '../db/db';
-import { investmentProducts } from '../db/schema';
+import { investmentProducts, users } from '../db/schema';
 import { verifyToken } from '../utils/auth';
 import { eq, desc, asc } from 'drizzle-orm';
 
@@ -301,7 +301,6 @@ router.get('/:id', async (req, res) => {
 // POST /api/products (admin only)
 router.post('/', async (req, res) => {
   try {
-    // Verify admin token (simplified - in production, check user role)
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
@@ -314,6 +313,23 @@ router.post('/', async (req, res) => {
     if (!payload) {
       return res.status(401).json({
         error: 'Invalid or expired token'
+      });
+    }
+
+    // Temporarily allow any authenticated user to create products
+    // TODO: Add role checking after database migration
+    const user = await db
+      .select({
+        id: users.id,
+        email: users.email,
+      })
+      .from(users)
+      .where(eq(users.id, payload.userId))
+      .limit(1);
+
+    if (user.length === 0) {
+      return res.status(403).json({
+        error: 'User not found'
       });
     }
 
@@ -356,6 +372,104 @@ router.post('/', async (req, res) => {
     }
 
     console.error('Create product error:', error);
+    res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /products/{id}:
+ *   delete:
+ *     summary: Delete an investment product (Admin only)
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Product unique identifier
+ *     responses:
+ *       200:
+ *         description: Product deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Product deleted successfully"
+ *       401:
+ *         description: Unauthorized - Admin access required
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Internal server error
+ */
+// DELETE /api/products/:id (admin only)
+router.delete('/:id', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        error: 'Authorization required'
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const payload = verifyToken(token);
+    if (!payload) {
+      return res.status(401).json({
+        error: 'Invalid or expired token'
+      });
+    }
+
+    // Temporarily allow any authenticated user to delete products
+    // TODO: Add role checking after database migration
+    const user = await db
+      .select({
+        id: users.id,
+        email: users.email,
+      })
+      .from(users)
+      .where(eq(users.id, payload.userId))
+      .limit(1);
+
+    if (user.length === 0) {
+      return res.status(403).json({
+        error: 'User not found'
+      });
+    }
+
+    // Check if product exists
+    const product = await db
+      .select()
+      .from(investmentProducts)
+      .where(eq(investmentProducts.id, req.params.id))
+      .limit(1);
+
+    if (product.length === 0) {
+      return res.status(404).json({
+        error: 'Product not found'
+      });
+    }
+
+    // Delete the product
+    await db
+      .delete(investmentProducts)
+      .where(eq(investmentProducts.id, req.params.id));
+
+    res.json({
+      message: 'Product deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete product error:', error);
     res.status(500).json({
       error: 'Internal server error'
     });

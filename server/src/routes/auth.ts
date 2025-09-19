@@ -38,6 +38,13 @@ const updateProfileSchema = z.object({
   lastName: z.string().optional(),
 });
 
+const errorResponse = (res: Response, statusCode: number, message: string, details?: any) => {
+  res.status(statusCode).json({
+    error: message,
+    ...(details && { details }),
+  });
+};
+
 /**
  * @swagger
  * /auth/signup:
@@ -121,9 +128,12 @@ router.post('/signup', async (req: Request, res: Response) => {
       });
     }
 
-    // Check if user already exists
+    // Check if user already exists (without role field for now)
     const existingUser = await db
-      .select()
+      .select({
+        id: users.id,
+        email: users.email,
+      })
       .from(users)
       .where(eq(users.email, validatedData.email))
       .limit(1);
@@ -247,9 +257,18 @@ router.post('/login', async (req: Request, res: Response) => {
   try {
     const validatedData = loginSchema.parse(req.body);
 
-    // Find user by email
+    // Find user by email (without role field for now)
     const user = await db
-      .select()
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        passwordHash: users.passwordHash,
+        riskAppetite: users.riskAppetite,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
       .from(users)
       .where(eq(users.email, validatedData.email))
       .limit(1);
@@ -286,6 +305,8 @@ router.post('/login', async (req: Request, res: Response) => {
         lastName: foundUser.lastName,
         email: foundUser.email,
         riskAppetite: foundUser.riskAppetite,
+        createdAt: foundUser.createdAt,
+        updatedAt: foundUser.updatedAt,
       },
     });
   } catch (error) {

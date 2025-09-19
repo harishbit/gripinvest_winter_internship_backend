@@ -15,7 +15,10 @@ class ApiClient {
   ): Promise<T> {
     // Ensure we're using absolute URLs
     const url = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
-    const token = localStorage.getItem('token');
+    
+    // Check for admin token first, then regular token
+    const adminToken = localStorage.getItem('adminToken');
+    const token = adminToken || localStorage.getItem('token');
 
     const config: RequestInit = {
       headers: {
@@ -110,6 +113,57 @@ class ApiClient {
   // Health endpoint
   async getHealth() {
     return this.request('/api/health');
+  }
+
+  // Admin endpoints (requires admin token)
+  async createProduct(data: {
+    name: string;
+    investmentType: 'bond' | 'fd' | 'mf' | 'etf' | 'other';
+    tenureMonths: number;
+    annualYield: number;
+    riskLevel: 'low' | 'moderate' | 'high';
+    minInvestment: number;
+    maxInvestment?: number;
+    description?: string;
+  }) {
+    return this.request('/api/products', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteProduct(id: string) {
+    return this.request(`/api/products/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Admin authentication methods
+  async adminLogin(email: string, password: string) {
+    const response = await this.request<{ token: string; user: any }>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+    
+    // Store admin token separately
+    this.setAdminToken(response.token);
+    return response;
+  }
+
+  setAdminToken(token: string) {
+    localStorage.setItem('adminToken', token);
+  }
+
+  getAdminToken(): string | null {
+    return localStorage.getItem('adminToken');
+  }
+
+  removeAdminToken() {
+    localStorage.removeItem('adminToken');
+  }
+
+  isAdminAuthenticated(): boolean {
+    return !!this.getAdminToken();
   }
 }
 
